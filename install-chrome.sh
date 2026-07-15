@@ -203,7 +203,7 @@ remove_chrome() {
 # Main installation logic
 main() {
     echo -e "${BLUE}╔══════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${BLUE}║     Google Chrome Auto Installer for Linux              ║${NC}"
+    echo -e "${BLUE}║     Google Chrome Auto Installer for Linux Kernal        ║${NC}"
     echo -e "${BLUE}╚══════════════════════════════════════════════════════════╝${NC}"
     echo ""
     
