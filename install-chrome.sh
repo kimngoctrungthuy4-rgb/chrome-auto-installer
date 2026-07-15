@@ -32,10 +32,18 @@ print_warning() {
     echo -e "${YELLOW}[!]${NC} $1"
 }
 
-# Check if running as root
-check_root() {
+# Check if running as root (for apt/yum operations)
+check_root_for_pacman() {
+    if [[ $EUID -eq 0 ]]; then
+        print_warning "Script không nên chạy với sudo trên Arch-based distros (yay/paru sẽ tự hỏi password)"
+        print_info "Vui lòng chạy lại KHÔNG có sudo: ./install-chrome.sh"
+        exit 1
+    fi
+}
+
+check_root_for_apt_rpm() {
     if [[ $EUID -ne 0 ]]; then
-        print_error "Script này phải chạy với quyền root (sudo)"
+        print_error "Script này phải chạy với quyền root (sudo) cho apt/yum"
         exit 1
     fi
 }
@@ -94,6 +102,8 @@ detect_distro() {
 
 # Install Chrome on Ubuntu/Debian (APT)
 install_chrome_apt() {
+    check_root_for_apt_rpm
+    
     print_info "Cài đặt Google Chrome trên Ubuntu/Debian..."
     
     # Update package list
@@ -122,6 +132,8 @@ install_chrome_apt() {
 
 # Install Chrome on Fedora/CentOS/RHEL (RPM)
 install_chrome_rpm() {
+    check_root_for_apt_rpm
+    
     print_info "Cài đặt Google Chrome trên Fedora/CentOS/RHEL..."
     
     # Install dependencies
@@ -148,28 +160,32 @@ EOF
 
 # Install Chrome on Arch Linux / Manjaro / CachyOS (PACMAN)
 install_chrome_pacman() {
+    check_root_for_pacman
+    
     print_info "Cài đặt Google Chrome trên $DISTRO (Arch-based)..."
     
     # Update package database
     print_info "Cập nhật cơ sở dữ liệu gói..."
-    pacman -Sy
+    sudo pacman -Sy
     
     # Install Google Chrome from AUR using yay or makepkg
     print_info "Kiểm tra xem yay có được cài đặt không..."
     
     if command -v yay &> /dev/null; then
         print_info "Sử dụng yay để cài đặt Google Chrome..."
+        print_info "yay sẽ hỏi password nếu cần..."
         yay -S --noconfirm google-chrome
     elif command -v paru &> /dev/null; then
         print_info "Sử dụng paru để cài đặt Google Chrome..."
+        print_info "paru sẽ hỏi password nếu cần..."
         paru -S --noconfirm google-chrome
     else
         print_warning "yay hoặc paru không được cài đặt"
         print_info "Bạn có thể cài đặt yay: https://github.com/Jguer/yay"
-        print_info "Hoặc cài đặt từ kho chính thức: pacman -S chromium"
+        print_info "Hoặc cài đặt từ kho chính thức: sudo pacman -S chromium"
         
         if prompt_user "Bạn muốn cài đặt Chromium thay thế không? (y/n): "; then
-            pacman -S --noconfirm chromium
+            sudo pacman -S --noconfirm chromium
             print_success "Chromium đã được cài đặt thành công!"
         else
             print_warning "Hủy cài đặt"
@@ -186,15 +202,18 @@ remove_chrome() {
     
     case "$DISTRO" in
         ubuntu|debian)
+            check_root_for_apt_rpm
             apt-get remove -y google-chrome-stable
             print_success "Google Chrome đã bị gỡ cài đặt!"
             ;;
         fedora|rhel|centos)
+            check_root_for_apt_rpm
             yum remove -y google-chrome-stable
             print_success "Google Chrome đã bị gỡ cài đặt!"
             ;;
         arch|manjaro|cachyos)
-            pacman -R --noconfirm google-chrome
+            check_root_for_pacman
+            sudo pacman -R --noconfirm google-chrome
             print_success "Google Chrome đã bị gỡ cài đặt!"
             ;;
     esac
@@ -203,12 +222,18 @@ remove_chrome() {
 # Main installation logic
 main() {
     echo -e "${BLUE}╔══════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${BLUE}║     Google Chrome Auto Installer for Linux Kernal        ║${NC}"
+    echo -e "${BLUE}║     Google Chrome Auto Installer for Linux              ║${NC}"
     echo -e "${BLUE}╚══════════════════════════════════════════════════════════╝${NC}"
     echo ""
     
-    check_root
     detect_distro
+    
+    # Special handling for Arch-based distros
+    if [[ "$DISTRO" == "arch" || "$DISTRO" == "manjaro" || "$DISTRO" == "cachyos" ]]; then
+        check_root_for_pacman
+    else
+        check_root_for_apt_rpm
+    fi
     
     # Check if Chrome is already installed
     if check_chrome_installed; then
