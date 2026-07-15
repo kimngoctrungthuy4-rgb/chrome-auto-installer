@@ -125,4 +125,4 @@ MIT License - Bạn tự do sử dụng, chỉnh sửa và phân phối script n
 ---
 
 **Được tạo bởi**: kimngoctrungthuy4-rgb
-**Cập nhật lần cuối**: 2024
+**Cập nhật lần cuối**: 2026
