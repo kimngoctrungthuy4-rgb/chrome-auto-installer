@@ -6,7 +6,7 @@ Script tự động phát hiện bản phân phối Linux và cài đặt Google
 
 - ✅ **Ubuntu** / **Debian** (APT)
 - ✅ **Fedora** / **CentOS** / **RHEL** (RPM)
-- ✅ **Arch Linux** / **Manjaro** (PACMAN)
+- ✅ **Arch Linux** / **Manjaro**/**CachyOS** (PACMAN)
 
 ## Yêu cầu
 
