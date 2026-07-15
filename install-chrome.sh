@@ -21,15 +21,15 @@ print_info() {
 }
 
 print_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
+    echo -e "${GREEN}[✓]${NC} $1"
 }
 
 print_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
+    echo -e "${RED}[✗]${NC} $1"
 }
 
 print_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
+    echo -e "${YELLOW}[!]${NC} $1"
 }
 
 # Check if running as root
@@ -38,6 +38,38 @@ check_root() {
         print_error "Script này phải chạy với quyền root (sudo)"
         exit 1
     fi
+}
+
+# Check if Chrome is already installed
+check_chrome_installed() {
+    if command -v google-chrome &> /dev/null; then
+        CHROME_VERSION=$(google-chrome --version)
+        print_success "Google Chrome đã cài sẵn!"
+        print_info "$CHROME_VERSION"
+        return 0
+    fi
+    return 1
+}
+
+# Prompt user for action
+prompt_user() {
+    local message=$1
+    local response
+    
+    while true; do
+        read -p "$(echo -e ${BLUE}$message${NC})" response
+        case "$response" in
+            [Yy])
+                return 0
+                ;;
+            [Nn])
+                return 1
+                ;;
+            *)
+                print_warning "Vui lòng nhập Y hoặc N"
+                ;;
+        esac
+    done
 }
 
 # Detect Linux distribution
@@ -136,11 +168,11 @@ install_chrome_pacman() {
         print_info "Bạn có thể cài đặt yay: https://github.com/Jguer/yay"
         print_info "Hoặc cài đặt từ kho chính thức: pacman -S chromium"
         
-        read -p "Bạn muốn cài đặt Chromium thay thế không? (y/n): " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
+        if prompt_user "Bạn muốn cài đặt Chromium thay thế không? (y/n): "; then
             pacman -S --noconfirm chromium
             print_success "Chromium đã được cài đặt thành công!"
+        else
+            print_warning "Hủy cài đặt"
         fi
         exit 0
     fi
@@ -148,16 +180,78 @@ install_chrome_pacman() {
     print_success "Google Chrome đã được cài đặt thành công!"
 }
 
+# Remove Chrome
+remove_chrome() {
+    print_warning "Gỡ cài đặt Google Chrome..."
+    
+    case "$DISTRO" in
+        ubuntu|debian)
+            apt-get remove -y google-chrome-stable
+            print_success "Google Chrome đã bị gỡ cài đặt!"
+            ;;
+        fedora|rhel|centos)
+            yum remove -y google-chrome-stable
+            print_success "Google Chrome đã bị gỡ cài đặt!"
+            ;;
+        arch|manjaro)
+            pacman -R --noconfirm google-chrome
+            print_success "Google Chrome đã bị gỡ cài đặt!"
+            ;;
+    esac
+}
+
 # Main installation logic
 main() {
-    echo -e "${BLUE}╔════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${BLUE}║     Google Chrome Auto Installer for Linux                 ║${NC}"
-    echo -e "${BLUE}╚════════════════════════════════════════════════════════════╝${NC}"
+    echo -e "${BLUE}╔══════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${BLUE}║     Google Chrome Auto Installer for Linux              ║${NC}"
+    echo -e "${BLUE}╚══════════════════════════════════════════════════════════╝${NC}"
     echo ""
     
     check_root
     detect_distro
     
+    # Check if Chrome is already installed
+    if check_chrome_installed; then
+        echo ""
+        print_warning "Google Chrome đã cài sẵn trên hệ thống của bạn"
+        echo ""
+        
+        echo -e "${BLUE}Bạn muốn làm gì?${NC}"
+        echo "1) Cài đặt lại (Reinstall)"
+        echo "2) Gỡ cài đặt (Remove)"
+        echo "3) Thoát (Exit)"
+        echo ""
+        
+        read -p "Chọn lựa chọn (1-3): " choice
+        
+        case $choice in
+            1)
+                print_info "Gỡ cài đặt Chrome cũ..."
+                remove_chrome
+                echo ""
+                print_info "Cài đặt Chrome mới..."
+                ;;
+            2)
+                if prompt_user "Bạn chắc chắn muốn gỡ cài đặt Chrome không? (y/n): "; then
+                    remove_chrome
+                    exit 0
+                else
+                    print_warning "Hủy gỡ cài đặt"
+                    exit 0
+                fi
+                ;;
+            3)
+                print_info "Thoát"
+                exit 0
+                ;;
+            *)
+                print_error "Lựa chọn không hợp lệ"
+                exit 1
+                ;;
+        esac
+    fi
+    
+    # Install Chrome
     case "$DISTRO" in
         ubuntu|debian)
             install_chrome_apt
