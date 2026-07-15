@@ -3,7 +3,7 @@
 ###############################################################################
 # Chrome Auto Installer for Linux
 # Automatically detects Linux distribution and installs Google Chrome
-# Supports: Ubuntu/Debian (apt), Fedora/CentOS/RHEL (rpm), Arch Linux (pacman)
+# Supports: Ubuntu/Debian (apt), Fedora/CentOS/RHEL (rpm), Arch/Manjaro/CachyOS (pacman)
 ###############################################################################
 
 set -e
@@ -146,9 +146,9 @@ EOF
     print_success "Google Chrome đã được cài đặt thành công!"
 }
 
-# Install Chrome on Arch Linux (PACMAN)
+# Install Chrome on Arch Linux / Manjaro / CachyOS (PACMAN)
 install_chrome_pacman() {
-    print_info "Cài đặt Google Chrome trên Arch Linux..."
+    print_info "Cài đặt Google Chrome trên $DISTRO (Arch-based)..."
     
     # Update package database
     print_info "Cập nhật cơ sở dữ liệu gói..."
@@ -193,7 +193,7 @@ remove_chrome() {
             yum remove -y google-chrome-stable
             print_success "Google Chrome đã bị gỡ cài đặt!"
             ;;
-        arch|manjaro)
+        arch|manjaro|cachyos)
             pacman -R --noconfirm google-chrome
             print_success "Google Chrome đã bị gỡ cài đặt!"
             ;;
@@ -259,12 +259,12 @@ main() {
         fedora|rhel|centos)
             install_chrome_rpm
             ;;
-        arch|manjaro)
+        arch|manjaro|cachyos)
             install_chrome_pacman
             ;;
         *)
             print_error "Bản phân phối '$DISTRO' không được hỗ trợ"
-            print_info "Các bản được hỗ trợ: Ubuntu, Debian, Fedora, CentOS, RHEL, Arch Linux, Manjaro"
+            print_info "Các bản được hỗ trợ: Ubuntu, Debian, Fedora, CentOS, RHEL, Arch Linux, Manjaro, CachyOS"
             exit 1
             ;;
     esac
