@@ -110,6 +110,7 @@ sudo pacman -R google-chrome
 
 - GitHub: [@kimngoctrungthuy4-rgb](https://github.com/kimngoctrungthuy4-rgb)
 - Repository: [chrome-auto-installer](https://github.com/kimngoctrungthuy4-rgb/chrome-auto-installer)
+- Gmail:kimngoctrungthuy4@gmail.com
 
 ## License
 
