@@ -1,0 +1,184 @@
+#!/bin/bash
+
+###############################################################################
+# Chrome Auto Installer for Linux
+# Automatically detects Linux distribution and installs Google Chrome
+# Supports: Ubuntu/Debian (apt), Fedora/CentOS/RHEL (rpm), Arch Linux (pacman)
+###############################################################################
+
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Functions
+print_info() {
+    echo -e "${BLUE}[INFO]${NC} $1"
+}
+
+print_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
+
+print_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+print_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
+}
+
+# Check if running as root
+check_root() {
+    if [[ $EUID -ne 0 ]]; then
+        print_error "Script này phải chạy với quyền root (sudo)"
+        exit 1
+    fi
+}
+
+# Detect Linux distribution
+detect_distro() {
+    print_info "Đang phát hiện bản phân phối Linux..."
+    
+    if [ -f /etc/os-release ]; then
+        . /etc/os-release
+        DISTRO=$ID
+        DISTRO_VERSION=$VERSION_ID
+    elif [ -f /etc/redhat-release ]; then
+        DISTRO="rhel"
+    elif [ -f /etc/debian_version ]; then
+        DISTRO="debian"
+    else
+        print_error "Không thể phát hiện bản phân phối Linux"
+        exit 1
+    fi
+    
+    print_success "Phát hiện: $DISTRO (Version: $DISTRO_VERSION)"
+}
+
+# Install Chrome on Ubuntu/Debian (APT)
+install_chrome_apt() {
+    print_info "Cài đặt Google Chrome trên Ubuntu/Debian..."
+    
+    # Update package list
+    print_info "Cập nhật danh sách gói..."
+    apt-get update
+    
+    # Install dependencies
+    print_info "Cài đặt các gói phụ thuộc..."
+    apt-get install -y wget gnupg
+    
+    # Add Google Chrome repository
+    print_info "Thêm kho lưu trữ Google Chrome..."
+    wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
+    echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | tee /etc/apt/sources.list.d/google-chrome.list
+    
+    # Update package list again
+    print_info "Cập nhật danh sách gói..."
+    apt-get update
+    
+    # Install Google Chrome
+    print_info "Cài đặt Google Chrome..."
+    apt-get install -y google-chrome-stable
+    
+    print_success "Google Chrome đã được cài đặt thành công!"
+}
+
+# Install Chrome on Fedora/CentOS/RHEL (RPM)
+install_chrome_rpm() {
+    print_info "Cài đặt Google Chrome trên Fedora/CentOS/RHEL..."
+    
+    # Install dependencies
+    print_info "Cài đặt các gói phụ thuộc..."
+    yum install -y wget
+    
+    # Add Google Chrome repository
+    print_info "Thêm kho lưu trữ Google Chrome..."
+    cat > /etc/yum.repos.d/google-chrome.repo << EOF
+[google-chrome]
+name=google-chrome
+baseurl=http://dl.google.com/linux/chrome/rpm/stable/x86_64
+enabled=1
+gpgcheck=1
+gpgkey=https://dl-ssl.google.com/linux/linux_signing_key.pub
+EOF
+    
+    # Install Google Chrome
+    print_info "Cài đặt Google Chrome..."
+    yum install -y google-chrome-stable
+    
+    print_success "Google Chrome đã được cài đặt thành công!"
+}
+
+# Install Chrome on Arch Linux (PACMAN)
+install_chrome_pacman() {
+    print_info "Cài đặt Google Chrome trên Arch Linux..."
+    
+    # Update package database
+    print_info "Cập nhật cơ sở dữ liệu gói..."
+    pacman -Sy
+    
+    # Install Google Chrome from AUR using yay or makepkg
+    print_info "Kiểm tra xem yay có được cài đặt không..."
+    
+    if command -v yay &> /dev/null; then
+        print_info "Sử dụng yay để cài đặt Google Chrome..."
+        yay -S --noconfirm google-chrome
+    elif command -v paru &> /dev/null; then
+        print_info "Sử dụng paru để cài đặt Google Chrome..."
+        paru -S --noconfirm google-chrome
+    else
+        print_warning "yay hoặc paru không được cài đặt"
+        print_info "Bạn có thể cài đặt yay: https://github.com/Jguer/yay"
+        print_info "Hoặc cài đặt từ kho chính thức: pacman -S chromium"
+        
+        read -p "Bạn muốn cài đặt Chromium thay thế không? (y/n): " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            pacman -S --noconfirm chromium
+            print_success "Chromium đã được cài đặt thành công!"
+        fi
+        exit 0
+    fi
+    
+    print_success "Google Chrome đã được cài đặt thành công!"
+}
+
+# Main installation logic
+main() {
+    echo -e "${BLUE}╔════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${BLUE}║     Google Chrome Auto Installer for Linux                 ║${NC}"
+    echo -e "${BLUE}╚════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+    
+    check_root
+    detect_distro
+    
+    case "$DISTRO" in
+        ubuntu|debian)
+            install_chrome_apt
+            ;;
+        fedora|rhel|centos)
+            install_chrome_rpm
+            ;;
+        arch|manjaro)
+            install_chrome_pacman
+            ;;
+        *)
+            print_error "Bản phân phối '$DISTRO' không được hỗ trợ"
+            print_info "Các bản được hỗ trợ: Ubuntu, Debian, Fedora, CentOS, RHEL, Arch Linux, Manjaro"
+            exit 1
+            ;;
+    esac
+    
+    echo ""
+    print_success "Cài đặt hoàn tất!"
+    print_info "Bạn có thể chạy Google Chrome bằng lệnh: google-chrome"
+}
+
+# Run main function
+main "$@"
