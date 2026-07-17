@@ -10,7 +10,7 @@ Script tự động phát hiện bản phân phối Linux và cài đặt Google
 
 ## Yêu cầu
 
-- Quyền root (sudo)
+- Quyền root (sudo) Đối với cá hệ thuộc Debian(Ubuntu,Linux Mint,..) và Redhat(Fedora,RHEL,..)
 - Kết nối internet
 - `wget` hoặc `curl` (sẽ được cài đặt tự động nếu cần)
 
@@ -28,11 +28,15 @@ chmod +x install-chrome.sh
 ```
 
 ### 3. Chạy script
+Dối với hệ Debian
 ```bash
 sudo ./install-chrome.sh
 ```
-
-Script sẽ:
+Dối với hệ Arch Linux(Cachy OS,Arch Linux,Artic,..)
+```bash
+./install-chrome.sH
+```
+##Script sẽ:
 1. Phát hiện bản phân phối Linux của bạn
 2. Cài đặt các gói phụ thuộc cần thiết
 3. Thêm kho lưu trữ Google Chrome
