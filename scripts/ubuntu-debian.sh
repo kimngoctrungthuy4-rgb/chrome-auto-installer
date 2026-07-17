@@ -23,16 +23,19 @@ sudo apt-get update
 echo -e "${BLUE}[*]${NC} Cài đặt các gói phụ thuộc..."
 sudo apt-get install -y wget gnupg ca-certificates
 
-# Add Google's GPG key
-echo -e "${BLUE}[*]${NC} Thêm GPG key của Google..."
-wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+# Create keyring directory if it doesn't exist
+sudo mkdir -p /usr/share/keyrings
 
-# Add Google Chrome repository
-echo -e "${BLUE}[*]${NC} Thêm kho lưu trữ Google Chrome..."
-echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list > /dev/null
+# Add Google's GPG key using modern and secure method (No apt-key)
+echo -e "${BLUE}[*]${NC} Thêm GPG key bảo mật của Google..."
+wget -qO- https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --dearmor | sudo tee /usr/share/keyrings/google-chrome.gpg > /dev/null
+
+# Add Google Chrome repository with signed-by protection
+echo -e "${BLUE}[*]${NC} Thêm kho lưu trữ Google Chrome (signed-by)..."
+echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list > /dev/null
 
 # Update package list again
-echo -e "${BLUE}[*]${NC} Cập nhật danh sách gói..."
+echo -e "${BLUE}[*]${NC} Cập nhật danh sách gói mới..."
 sudo apt-get update
 
 # Install Google Chrome
@@ -40,3 +43,4 @@ echo -e "${BLUE}[*]${NC} Cài đặt Google Chrome..."
 sudo apt-get install -y google-chrome-stable
 
 echo -e "${GREEN}[✓]${NC} Cài đặt hoàn tất! Bạn có thể chạy: google-chrome"
+
