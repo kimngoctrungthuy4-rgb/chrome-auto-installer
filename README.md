@@ -34,7 +34,7 @@ sudo ./install-chrome.sh
 ```
 Dối với hệ Arch Linux(Cachy OS,Arch Linux,Artic,..)
 ```bash
-./install-chrome.sH
+./install-chrome.sh
 ```
 ##Script sẽ:
 1. Phát hiện bản phân phối Linux của bạn
